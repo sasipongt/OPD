@@ -1,0 +1,1314 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>OPD Medical Record</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=IBM+Plex+Sans+Thai:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --bg:#0a0a0a;--bg2:#111;--bg3:#181818;--bg4:#222;
+  --border:#2a2a2a;--border2:#333;
+  --text:#e8e8e8;--text2:#999;--text3:#555;
+  --accent:#00d4aa;--accent2:#00a882;--accent-bg:rgba(0,212,170,.12);
+  --red:#ff4757;--red-bg:rgba(255,71,87,.12);
+  --yellow:#ffd700;--yellow-bg:rgba(255,215,0,.1);
+  --mono:'JetBrains Mono',monospace;
+  --sans:'IBM Plex Sans Thai',sans-serif;
+  --r:8px;--rl:12px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh;font-size:14px;line-height:1.6}
+.shell{max-width:720px;margin:0 auto;padding:1.5rem 1.25rem 5rem}
+
+/* header */
+.hdr{display:flex;align-items:center;gap:10px;margin-bottom:1.75rem;padding-bottom:1rem;border-bottom:0.5px solid var(--border)}
+.hdr-dot{width:8px;height:8px;border-radius:50%;background:var(--accent);box-shadow:0 0 8px var(--accent);flex-shrink:0}
+.hdr-title{font-family:var(--mono);font-size:12px;font-weight:700;color:var(--accent);letter-spacing:.14em;text-transform:uppercase}
+.hdr-date{font-size:11px;color:var(--text3);margin-left:auto;font-family:var(--mono)}
+
+/* views */
+#view-form,#view-output{display:block}
+
+/* section */
+.sec{margin-bottom:1.75rem}
+.sec-lbl{font-family:var(--mono);font-size:10px;font-weight:700;color:var(--accent);letter-spacing:.14em;text-transform:uppercase;margin-bottom:.875rem;display:flex;align-items:center;gap:8px}
+.sec-lbl::after{content:'';flex:1;height:1px;background:var(--border)}
+
+/* labels */
+.lbl{font-size:10px;color:var(--text3);display:block;margin-bottom:4px;font-family:var(--mono);letter-spacing:.06em;text-transform:uppercase}
+.iw{margin-bottom:.75rem}
+
+/* inputs */
+input[type=text],textarea{
+  width:100%;background:var(--bg3);border:0.5px solid var(--border2);border-radius:var(--r);
+  padding:8px 12px;font-size:13px;font-family:var(--sans);color:var(--text);outline:none;
+  transition:border-color .15s,box-shadow .15s;
+}
+input[type=text]:focus,textarea:focus,
+input[type=text]:focus-visible,textarea:focus-visible{
+  border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-bg);
+}
+textarea{resize:vertical;line-height:1.6}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+
+/* pills */
+.pill-row{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:.75rem}
+.pill{
+  border:0.5px solid var(--border2);border-radius:999px;padding:5px 14px;font-size:12px;
+  cursor:pointer;font-family:var(--mono);background:var(--bg3);color:var(--text2);
+  transition:all .15s;user-select:none;
+}
+.pill:hover,.pill:focus{border-color:var(--accent);color:var(--accent);outline:none}
+.pill.sel{background:var(--accent-bg);border-color:var(--accent);color:var(--accent);box-shadow:0 0 8px rgba(0,212,170,.15)}
+.pill:focus-visible{box-shadow:0 0 0 2px var(--accent)}
+
+/* visit cards */
+.vcard-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:.75rem}
+.vcard{
+  border:0.5px solid var(--border2);border-radius:var(--rl);padding:12px 14px;
+  cursor:pointer;background:var(--bg3);display:block;text-align:left;
+  font-family:var(--sans);transition:all .15s;
+}
+.vcard:hover,.vcard:focus{background:var(--bg4);outline:none;border-color:var(--accent)}
+.vcard.sel{background:var(--accent-bg);border-color:var(--accent)}
+.vcard:focus-visible{box-shadow:0 0 0 2px var(--accent)}
+.vcard .vt{font-size:13px;font-weight:600;color:var(--text)}
+.vcard.sel .vt{color:var(--accent)}
+.vcard .vs{font-size:10px;color:var(--text3);margin-top:2px;font-family:var(--mono)}
+.vcard.sel .vs{color:var(--accent);opacity:.65}
+
+/* imaging */
+.img-block{margin-bottom:.5rem}
+.img-row{display:flex;align-items:center;gap:8px;padding:9px 12px;background:var(--bg3);border:0.5px solid var(--border);border-radius:var(--r);transition:border-color .15s}
+.img-row.state-nor{border-color:var(--accent)}
+.img-row.state-abn{border-color:var(--red)}
+.img-row.state-na{border-color:var(--text3)}
+.img-title{font-size:12px;font-weight:500;flex:1}
+.tgl-grp{display:flex;gap:3px}
+.tgl{
+  border:0.5px solid var(--border2);border-radius:6px;padding:4px 10px;font-size:11px;
+  cursor:pointer;font-family:var(--mono);background:var(--bg);color:var(--text3);
+  transition:all .15s;
+}
+.tgl:hover,.tgl:focus{border-color:var(--text2);color:var(--text2);outline:none}
+.tgl:focus-visible{box-shadow:0 0 0 2px var(--accent)}
+.tgl.nor{background:var(--accent-bg);border-color:var(--accent);color:var(--accent)}
+.tgl.abn{background:var(--red-bg);border-color:var(--red);color:var(--red)}
+.tgl.na{background:var(--bg4);border-color:var(--text3);color:var(--text3)}
+.img-detail{margin:5px 0 2px;display:none}
+.img-detail.show{display:block}
+.chips{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px}
+.chip{
+  border:0.5px solid var(--border2);border-radius:999px;padding:3px 10px;font-size:11px;
+  cursor:pointer;font-family:var(--mono);background:var(--bg3);color:var(--text2);transition:all .15s;
+}
+.chip:hover,.chip:focus{border-color:var(--accent);color:var(--accent);outline:none}
+.chip.sel{background:var(--red-bg);border-color:var(--red);color:var(--red)}
+.chip:focus-visible{box-shadow:0 0 0 2px var(--accent)}
+
+/* tags */
+.tag{display:inline-flex;align-items:center;gap:4px;background:var(--bg3);border:0.5px solid var(--border2);border-radius:999px;padding:3px 10px;font-size:11px;margin:3px;font-family:var(--mono)}
+.tag button{background:none;border:none;cursor:pointer;color:var(--text3);font-size:14px;line-height:1;padding:0}
+.tag button:hover{color:var(--red)}
+.tags-wrap{min-height:20px;display:flex;flex-wrap:wrap;margin-bottom:.5rem}
+.add-row{display:flex;gap:7px;margin-bottom:.5rem}
+.add-row input{flex:1}
+.abtn{
+  background:var(--bg3);border:0.5px solid var(--border2);border-radius:var(--r);
+  padding:7px 12px;font-size:11px;cursor:pointer;color:var(--text2);font-family:var(--mono);
+  white-space:nowrap;transition:all .15s;text-transform:uppercase;letter-spacing:.06em;
+}
+.abtn:hover,.abtn:focus{border-color:var(--accent);color:var(--accent);outline:none}
+.abtn:focus-visible{box-shadow:0 0 0 2px var(--accent)}
+
+/* prob card */
+.pcard{background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--rl);padding:1rem;margin-bottom:.625rem}
+.pcard-hd{display:flex;justify-content:space-between;align-items:center;margin-bottom:.875rem}
+.pcard-name{font-size:11px;font-weight:700;color:var(--accent);font-family:var(--mono);letter-spacing:.06em;text-transform:uppercase}
+.pdel{background:none;border:none;font-size:18px;cursor:pointer;color:var(--text3);line-height:1;transition:color .15s;padding:0}
+.pdel:hover,.pdel:focus{color:var(--red);outline:none}
+
+/* occ extra */
+.occ-box{border:0.5px solid var(--border);border-radius:var(--rl);padding:1rem;margin-top:.625rem;background:var(--bg3)}
+
+/* MHF box */
+.mhf-box{border:0.5px solid rgba(0,212,170,.3);border-radius:var(--rl);padding:1rem;background:rgba(0,212,170,.06);margin-bottom:.75rem}
+.mhf-title{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--accent);margin-bottom:.25rem;letter-spacing:.08em;text-transform:uppercase}
+.mhf-sub{font-size:12px;color:var(--text2);margin-bottom:.75rem}
+
+/* CV risk box */
+.cv-box{border:0.5px solid var(--border);border-radius:var(--rl);padding:1rem;background:var(--bg3);margin-top:.5rem}
+.cv-score{font-family:var(--mono);font-size:28px;font-weight:700}
+.cv-score.low{color:var(--accent)}
+.cv-score.mod{color:var(--yellow)}
+.cv-score.high{color:var(--red)}
+.cv-label{font-size:12px;color:var(--text2);margin-top:2px}
+
+/* generate button */
+.gen-btn{
+  width:100%;background:var(--accent);border:none;border-radius:var(--r);
+  padding:11px 22px;font-size:13px;font-weight:700;cursor:pointer;color:#000;
+  font-family:var(--mono);letter-spacing:.06em;text-transform:uppercase;
+  transition:all .15s;margin-top:.5rem;
+}
+.gen-btn:hover,.gen-btn:focus{background:var(--accent2);box-shadow:0 0 20px rgba(0,212,170,.25);outline:none}
+.gen-btn:focus-visible{box-shadow:0 0 0 3px var(--accent)}
+
+/* output */
+.out-tabs{display:flex;border-bottom:0.5px solid var(--border);margin-bottom:0}
+.out-tab{
+  padding:8px 18px;font-size:10px;font-family:var(--mono);font-weight:700;letter-spacing:.1em;
+  text-transform:uppercase;cursor:pointer;color:var(--text3);border:none;border-bottom:2px solid transparent;
+  background:none;transition:all .15s;
+}
+.out-tab:hover,.out-tab:focus{color:var(--text2);outline:none}
+.out-tab.active{color:var(--accent);border-bottom:2px solid var(--accent)}
+.out-tab:focus-visible{box-shadow:0 0 0 2px var(--accent)}
+.out-panel{display:none;background:var(--bg2);border:0.5px solid var(--border);border-top:none;border-radius:0 0 var(--rl) var(--rl);padding:1.25rem}
+.out-panel.active{display:block}
+.out-pre{font-family:var(--mono);font-size:12px;line-height:1.9;color:var(--text);white-space:pre-wrap}
+.out-actions{display:flex;gap:8px;margin-top:1rem;flex-wrap:wrap}
+.copy-btn{
+  background:var(--bg3);border:0.5px solid var(--border2);border-radius:var(--r);
+  padding:7px 16px;font-size:10px;cursor:pointer;color:var(--text2);font-family:var(--mono);
+  transition:all .15s;letter-spacing:.08em;text-transform:uppercase;
+}
+.copy-btn:hover,.copy-btn:focus{border-color:var(--accent);color:var(--accent);outline:none}
+.copy-btn.ok{border-color:var(--accent);color:var(--accent);background:var(--accent-bg)}
+.back-btn{
+  background:transparent;border:0.5px solid var(--border2);border-radius:var(--r);
+  padding:7px 16px;font-size:10px;cursor:pointer;color:var(--text2);font-family:var(--mono);
+  transition:all .15s;letter-spacing:.08em;text-transform:uppercase;
+}
+.back-btn:hover,.back-btn:focus{border-color:var(--accent);color:var(--accent);outline:none}
+.new-btn{
+  background:transparent;border:0.5px solid var(--border2);border-radius:var(--r);
+  padding:7px 16px;font-size:10px;cursor:pointer;color:var(--text2);font-family:var(--mono);
+  transition:all .15s;letter-spacing:.08em;text-transform:uppercase;margin-left:auto;
+}
+.new-btn:hover,.new-btn:focus{border-color:var(--red);color:var(--red);outline:none}
+
+.note{font-size:11px;color:var(--text3);font-family:var(--mono);margin-top:3px}
+
+/* Toast */
+#toast-wrap{position:fixed;top:1rem;right:1rem;z-index:9999;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+.toast{
+  background:var(--bg2);border:0.5px solid var(--accent);border-radius:var(--r);
+  padding:10px 16px;font-family:var(--mono);font-size:12px;color:var(--accent);
+  letter-spacing:.04em;box-shadow:0 4px 20px rgba(0,0,0,.4),0 0 12px rgba(0,212,170,.15);
+  animation:toast-in .2s ease-out;max-width:300px;
+}
+.toast.error{border-color:var(--red);color:var(--red);box-shadow:0 4px 20px rgba(0,0,0,.4),0 0 12px rgba(255,71,87,.15)}
+.toast.fade-out{animation:toast-out .3s ease-in forwards}
+@keyframes toast-in{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
+@keyframes toast-out{from{opacity:1;transform:translateX(0)}to{opacity:0;transform:translateX(20px)}}
+</style>
+</head>
+<body>
+<div id="toast-wrap"></div>
+<div class="shell">
+  <div class="hdr">
+    <div class="hdr-dot"></div>
+    <div class="hdr-title">OPD Medical Record</div>
+    <div class="hdr-date" id="hdr-date"></div>
+  </div>
+
+  <!-- FORM VIEW -->
+  <div id="view-form">
+
+    <!-- 1. Patient -->
+    <div class="sec">
+      <div class="sec-lbl">Patient Info</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:.75rem">
+        <div class="iw" style="margin-bottom:0">
+          <label class="lbl">อายุ (ปี)</label>
+          <input type="text" id="qi" placeholder="47  หรือ  47m, 47f" autocomplete="off" style="font-size:16px"/>
+          <div id="qi-err" style="font-size:11px;color:var(--red);margin-top:3px;display:none;font-family:var(--mono)">กรุณาระบุอายุ</div>
+        </div>
+        <div class="iw" style="margin-bottom:0">
+          <label class="lbl">เพศ</label>
+          <div class="pill-row" id="sex-row" style="margin-bottom:0;margin-top:2px"></div>
+        </div>
+      </div>
+      <div class="iw">
+        <label class="lbl">Smoking status</label>
+        <div class="pill-row" id="smoke-row"></div>
+      </div>
+      <div class="iw">
+        <label class="lbl">ประเภทการตรวจ</label>
+        <div class="vcard-row" id="visit-row"></div>
+      </div>
+      <div id="occ-box" style="display:none">
+        <div class="occ-box">
+          <div class="iw">
+            <label class="lbl">Job / ตำแหน่งงาน</label>
+            <input type="text" id="job-in" placeholder="เช่น Electrician, Welder, Deck Officer..."/>
+          </div>
+          <div class="iw" style="margin-bottom:0">
+            <label class="lbl">Work type</label>
+            <div class="pill-row" id="wt-row"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. Underlying -->
+    <div class="sec">
+      <div class="sec-lbl">Underlying Disease</div>
+      <div class="pill-row" id="ud-yn"></div>
+      <div id="ud-detail" style="display:none">
+        <div class="add-row">
+          <input type="text" id="ud-in" placeholder="เช่น DM, HT..."/>
+          <button class="abtn" type="button" id="ud-add">+ Add</button>
+        </div>
+        <div class="tags-wrap" id="ud-tags"></div>
+        <div class="pill-row" id="ud-presets"></div>
+      </div>
+    </div>
+
+    <!-- 3. Imaging -->
+    <div class="sec">
+      <div class="sec-lbl">Imaging &amp; Special Investigations</div>
+      <div id="img-cxr"></div>
+      <div id="img-us"></div>
+      <div id="img-ekg"></div>
+      <div id="img-est"></div>
+      <div id="img-mammo"></div>
+      <div id="img-occ-extra" style="display:none">
+        <div id="img-audio"></div>
+        <div id="img-eye"></div>
+        <div id="img-spiro"></div>
+      </div>
+    </div>
+
+    <!-- 4. Problems -->
+    <div class="sec">
+      <div class="sec-lbl">Problems List</div>
+      <div class="pill-row" id="prob-presets"></div>
+      <div class="add-row">
+        <input type="text" id="prob-custom" placeholder="พิมพ์ชื่อปัญหาอื่นๆ"/>
+        <button class="abtn" type="button" id="prob-custom-add">+ Add</button>
+      </div>
+      <div class="tags-wrap" id="prob-tags"></div>
+    </div>
+
+    <!-- 5. Problem details -->
+    <div class="sec">
+      <div class="sec-lbl">Problem Details</div>
+      <div id="prob-cards"></div>
+    </div>
+
+    <!-- 6. Extra -->
+    <div class="sec">
+      <div class="sec-lbl">Additional Notes</div>
+      <textarea id="extra-note" style="min-height:56px" placeholder="หมายเหตุเพิ่มเติม..."></textarea>
+    </div>
+
+    <!-- 7. MHF (shown conditionally) -->
+    <div class="sec" id="mhf-sec" style="display:none">
+      <div class="sec-lbl">MyHealthFirst (MHF)</div>
+      <div class="mhf-box">
+        <div class="mhf-title">ส่งผลผ่าน MyHealthFirst?</div>
+        <div class="mhf-sub">เลือก YES เพื่อสร้าง output ภาษาไทยสำหรับคนไข้อ่านบน platform MHF</div>
+        <div class="pill-row" id="mhf-row" style="margin-bottom:0"></div>
+      </div>
+    </div>
+
+    <button class="gen-btn" type="button" id="gen-btn">Generate Medical Record <span style="opacity:.5;font-weight:400;margin-left:8px;font-size:11px">⌘+Enter</span></button>
+  </div>
+
+  <!-- OUTPUT VIEW -->
+  <div id="view-output" style="display:none">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
+      <span style="font-family:var(--mono);font-size:11px;font-weight:700;color:var(--accent);letter-spacing:.12em;text-transform:uppercase">Medical Record</span>
+      <button class="new-btn" type="button" id="new-btn">+ ผู้ป่วยใหม่</button>
+    </div>
+    <div class="out-tabs" id="out-tabs"></div>
+    <div id="out-panels"></div>
+    <div class="out-actions">
+      <button class="back-btn" type="button" id="back-btn">← แก้ไขข้อมูล</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ใส่ URL ของ Google Apps Script ที่ deploy แล้วตรงนี้
+// (ดูวิธีสร้างในไฟล์ gemini_proxy.gs ที่แนบมา)
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx4CzmBCQ47N5fJzp2gHWBtKCNoNiU5Ag7rc7RAHdcUGQ1aWj2HV5ZVv3zzwzDwT-UQ/exec";
+
+async function translateImaging(text, type, targetInput, imgKey, btn) {
+  if (!text) return;
+  const originalValue = targetInput.value;
+  const originalBtn = btn ? btn.innerHTML : '';
+  targetInput.value = "...กำลังวิเคราะห์ผลด้วย AI...";
+  if (btn) { btn.disabled = true; btn.innerHTML = '⏳ กำลังแปล...'; btn.style.opacity = '0.6'; btn.style.cursor = 'wait'; }
+  const prompt = `แปลผลตรวจทางการแพทย์ต่อไปนี้เป็นภาษาไทยที่คนไข้เข้าใจง่าย กระชับ ตรงประเด็น ห้ามใช้คำลงท้ายว่า "ครับ" "ค่ะ" "นะครับ" "นะคะ" หรือคำสุภาพอื่นๆ ห้ามมีคำนำหรือคำลงท้าย ตอบเฉพาะเนื้อหาเท่านั้น ผลตรวจ (${type}): "${text}"`;
+  try {
+    const url = APPS_SCRIPT_URL + '?prompt=' + encodeURIComponent(prompt);
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+    const cleaned = data.result.trim()
+      .replace(/\\n/g, '\n')
+      .replace(/\s*(ครับ|ค่ะ|นะครับ|นะคะ|ครับ\/ค่ะ|ค่ะ\/ครับ)\s*$/g, '')
+      .replace(/\s*(ครับ|ค่ะ|นะครับ|นะคะ|ครับ\/ค่ะ|ค่ะ\/ครับ)\s*([.!]?)$/g, '$2')
+      .trim();
+    targetInput.value = cleaned;
+    if(imgKey && st[imgKey]) st[imgKey].aiTranslation = cleaned;
+  } catch (error) {
+    console.error("AI Error:", error);
+    targetInput.value = originalValue;
+    showToast("AI Error: " + error.message, 'error');
+  } finally {
+    if (btn) { btn.disabled = false; btn.innerHTML = originalBtn; btn.style.opacity = ''; btn.style.cursor = ''; }
+  }
+}
+
+function showToast(msg, type){
+  const wrap=document.getElementById('toast-wrap');
+  const t=document.createElement('div');
+  t.className='toast'+(type==='error'?' error':'');
+  t.textContent=msg;
+  wrap.appendChild(t);
+  setTimeout(()=>{t.classList.add('fade-out');setTimeout(()=>t.remove(),300);},2500);
+}
+
+document.getElementById('hdr-date').textContent=new Date().toLocaleDateString('th-TH',{year:'numeric',month:'short',day:'numeric'});
+
+/* ── State ── */
+const st={
+  age:'',sex:'',smoke:'',visit:'annual',job:'',workType:'',
+  udYes:null,uds:[],
+  cxr:{status:'na',findings:new Set(),custom:''},
+  us:{status:'na',findings:new Set(),custom:''},
+  ekg:{status:'na',findings:new Set(),custom:''},
+  est:{status:'na',findings:new Set(),custom:''},
+  mammo:{status:'na',findings:new Set(),custom:''},
+  audio:{status:'na',findings:new Set(),custom:''},
+  eye:{status:'na',findings:new Set(),custom:''},
+  spiro:{status:'na',findings:new Set(),custom:''},
+  probs:[],extra:'',mhf:null,
+  activeTab:'en',
+};
+const selProbs=new Set();
+
+/* ── Data ── */
+const MX={
+  DLP:s=>`1. Lifestyle modification: low-fat diet, reduce saturated/trans fat, aerobic exercise >=150 min/week${s?'\n2. Smoking cessation counseling\n3.':'\n2.'} Target LDL <100 mg/dL`,
+  'High blood pressure':s=>`1. Lifestyle modification: DASH diet, sodium restriction <2 g/day, weight reduction, exercise${s?'\n2. Smoking cessation counseling\n3.':'\n2.'} Recheck BP on next visit\n${s?'4':'3'}. Initiate antihypertensive if BP >=140/90 mmHg on repeat`,
+  Hypertension:s=>`1. Lifestyle modification: sodium restriction, DASH diet, weight reduction, exercise${s?'\n2. Smoking cessation counseling\n3.':'\n2.'} Continue/initiate antihypertensive\n${s?'4':'3'}. Target BP <130/80 mmHg\n${s?'5':'4'}. Monitor renal function and electrolytes`,
+  Overweight:s=>`1. Caloric restriction 500-750 kcal/day deficit\n2. Aerobic exercise >=150 min/week + resistance training\n3. Dietary counseling${s?'\n4. Smoking cessation counseling\n5.':'\n4.'} Target BMI <23 kg/m^2`,
+  Obesity:s=>`1. Structured weight loss; caloric restriction 500-1000 kcal/day\n2. Exercise >=150-300 min/week + resistance training\n3. Dietary counseling / nutritionist referral${s?'\n4. Smoking cessation counseling\n5.':'\n4.'} Target BMI <23 kg/m^2\n${s?'6':'5'}. Screen for comorbidities (DM, HTN, OSA, DLP)`,
+  Anemia:()=>{
+    const age=parseInt(st.age);const isMale=st.sex==='male';
+    const needsGI=isMale||(st.sex==='female'&&age>=55);
+    return `1. Refer for evaluation of underlying cause\n2. Iron studies, CBC with peripheral blood smear${needsGI?'\n3. Evaluate for GI source (consider endoscopy/colonoscopy)':''}\n${needsGI?'4':'3'}. Follow-up CBC after evaluation`;
+  },
+  Hypertriglyceridemia:s=>`1. Reduce simple carbohydrates, alcohol restriction, weight reduction${s?'\n2. Smoking cessation counseling\n3.':'\n2.'} Target TG <150 mg/dL`,
+  Hyperuricemia:()=>`1. Low-purine diet, limit alcohol (especially beer), adequate hydration\n2. Avoid fructose-rich foods and red meat`,
+  Gout:()=>`1. Acute attack: colchicine 1.2 mg then 0.6 mg after 1 hr, or NSAIDs\n2. Urate-lowering: allopurinol (start 100 mg/day, target UA <6 mg/dL)\n3. Low-purine diet, alcohol restriction, hydration\n4. Prophylactic colchicine 0.5 mg/day during allopurinol initiation`,
+  IFG:()=>`1. Weight reduction 5-7% of body weight\n2. Aerobic exercise >=150 min/week\n3. Dietary counseling: low GI diet, reduce simple carbohydrates\n4. Recheck FBS/HbA1c next year`,
+  DM:()=>{
+    const isKnown=st.uds.includes('DM');
+    return isKnown
+      ? `1. Continue follow-up with current physician\n2. Maintain medical nutrition therapy and regular exercise\n3. Annual monitoring: HbA1c, microalbumin, renal function, foot exam, ophthalmology`
+      : `1. Newly diagnosed — refer to physician for evaluation, treatment initiation, and follow-up\n2. Lifestyle modification: medical nutrition therapy, regular exercise\n3. Screen for diabetic complications (eye, kidney, foot)`;
+  },
+  'Abnormal liver enzyme':()=>`1. Investigate etiology: alcohol use, viral hepatitis, medications, fatty liver\n2. Avoid hepatotoxic medications and alcohol\n3. Repeat LFT in 4-8 weeks\n4. Refer if persistently elevated or >3x upper limit of normal`,
+  'Fatty liver':()=>`1. Weight reduction >=10% of body weight\n2. Aerobic exercise + resistance training\n3. Alcohol abstinence if alcohol-related\n4. Control metabolic risk factors (DM, DLP, HTN)\n5. Avoid hepatotoxic medications\n6. Follow-up USS liver in 6-12 months`,
+};
+const MX_TH={
+  DLP:s=>`1. ปรับพฤติกรรม: ลดอาหารไขมัน ไขมันอิ่มตัว และไขมันทรานส์ ออกกำลังกายแบบแอโรบิก >=150 นาที/สัปดาห์${s?'\n2. แนะนำเลิกสูบบุหรี่\n3.':'\n2.'} เป้าหมาย LDL <100 mg/dL`,
+  'High blood pressure':s=>`1. ปรับพฤติกรรม: ลดเกลือ <2 g/วัน ลดน้ำหนัก ออกกำลังกายสม่ำเสมอ${s?'\n2. แนะนำเลิกสูบบุหรี่\n3.':'\n2.'} นัดตรวจวัดความดันซ้ำครั้งหน้า\n${s?'4':'3'}. แพทย์จะพิจารณาเริ่มยาหากความดันยังสูง >=140/90 mmHg`,
+  Hypertension:s=>`1. ปรับพฤติกรรม: ลดเกลือ อาหาร DASH ลดน้ำหนัก ออกกำลังกาย${s?'\n2. แนะนำเลิกสูบบุหรี่\n3.':'\n2.'} รับประทานยาลดความดันต่อเนื่องตามแพทย์สั่ง\n${s?'4':'3'}. เป้าหมาย BP <130/80 mmHg`,
+  Overweight:s=>`1. ลดแคลอรี่ 500-750 kcal/วัน เลือกอาหารที่มีประโยชน์\n2. ออกกำลังกายแบบแอโรบิก >=150 นาที/สัปดาห์ ร่วมกับการฝึกกล้ามเนื้อ${s?'\n3. แนะนำเลิกสูบบุหรี่\n4.':'\n3.'} เป้าหมาย BMI <23 kg/m^2`,
+  Obesity:s=>`1. เข้าร่วมโปรแกรมลดน้ำหนักอย่างจริงจัง ลดแคลอรี่ 500-1000 kcal/วัน\n2. ออกกำลังกาย >=150-300 นาที/สัปดาห์\n3. ปรึกษานักโภชนาการ${s?'\n4. แนะนำเลิกสูบบุหรี่\n5.':'\n4.'} เป้าหมาย BMI <23 kg/m^2\n${s?'6':'5'}. ตรวจคัดกรองโรคแทรกซ้อน (เบาหวาน ความดัน ไขมัน)`,
+  Anemia:()=>{
+    const age=parseInt(st.age);const isMale=st.sex==='male';
+    const needsGI=isMale||(st.sex==='female'&&age>=55);
+    return `1. แนะนำพบแพทย์เพื่อหาสาเหตุของภาวะโลหิตจาง\n2. แพทย์จะตรวจเพิ่มเติม เช่น ตรวจระดับธาตุเหล็ก ตรวจเลือดดูเม็ดเลือดอย่างละเอียด${needsGI?'\n3. อาจต้องตรวจระบบทางเดินอาหาร (เช่น ส่องกล้องกระเพาะหรือลำไส้) เพื่อหาสาเหตุของการเสียเลือดเรื้อรัง':''}`;
+  },
+  Hypertriglyceridemia:s=>`1. ลดอาหารแป้งและน้ำตาล งดหรือลดแอลกอฮอล์ ลดน้ำหนัก${s?'\n2. แนะนำเลิกสูบบุหรี่\n3.':'\n2.'} เป้าหมาย TG <150 mg/dL`,
+  Hyperuricemia:()=>`1. ลดอาหารที่มีสารพิวรีนสูง เช่น เครื่องในสัตว์ อาหารทะเล เนื้อแดง\n2. งดหรือลดแอลกอฮอล์ โดยเฉพาะเบียร์\n3. ดื่มน้ำให้เพียงพอ >=2 ลิตร/วัน\n4. หลีกเลี่ยงน้ำหวานและเครื่องดื่มที่มีฟรุกโตส`,
+  Gout:()=>`1. ถ้ามีอาการปวดข้อเฉียบพลัน: รับประทานยาตามแพทย์สั่งทันที\n2. รับประทานยาลดกรดยูริกต่อเนื่องตามแพทย์สั่ง\n3. ลดอาหารพิวรีนสูง งดแอลกอฮอล์ ดื่มน้ำมากๆ\n4. เป้าหมาย: ระดับกรดยูริก <6 mg/dL`,
+  IFG:()=>`1. ลดน้ำหนัก 5-7% ของน้ำหนักตัว เพื่อลดความเสี่ยงเบาหวาน\n2. ออกกำลังกายแบบแอโรบิก >=150 นาที/สัปดาห์\n3. เลือกอาหาร glycemic index ต่ำ ลดแป้งขัดสีและน้ำตาล\n4. นัดตรวจระดับน้ำตาลซ้ำใน 6-12 เดือน`,
+  DM:()=>{
+    const isKnown=st.uds.includes('DM');
+    return isKnown
+      ? `1. แนะนำติดตามรักษาต่อเนื่องกับแพทย์ที่ดูแลอยู่\n2. ควบคุมอาหาร: ลดแป้งและน้ำตาล เพิ่มผักและโปรตีน\n3. ออกกำลังกายสม่ำเสมอ\n4. นัดตรวจตา ตรวจเท้า และตรวจไตปีละครั้ง`
+      : `1. ตรวจพบครั้งนี้ แนะนำพบแพทย์เพื่อรับการวินิจฉัยและรักษาต่อเนื่อง\n2. ควบคุมอาหาร: ลดแป้งและน้ำตาล เพิ่มผักและโปรตีน\n3. ออกกำลังกายสม่ำเสมอ\n4. แพทย์จะตรวจคัดกรองภาวะแทรกซ้อนของเบาหวาน เช่น ตา ไต เท้า`;
+  },
+  'Abnormal liver enzyme':()=>`1. ตรวจหาสาเหตุ: การดื่มแอลกอฮอล์ ไวรัสตับอักเสบ ยาที่ใช้ประจำ ไขมันพอกตับ\n2. งดแอลกอฮอล์และยาที่เป็นพิษต่อตับ\n3. นัดตรวจซ้ำใน 4-8 สัปดาห์\n4. ปรึกษาแพทย์ถ้าค่ายังสูงต่อเนื่อง หรือสูงกว่า 3 เท่าของค่าปกติ`,
+  'Fatty liver':()=>`1. ลดน้ำหนัก >=10% ของน้ำหนักตัว (สำคัญที่สุด)\n2. ออกกำลังกายทั้งแบบแอโรบิกและเสริมสร้างกล้ามเนื้อ\n3. งดแอลกอฮอล์โดยเด็ดขาด\n4. ควบคุมโรคร่วม: เบาหวาน ไขมัน ความดัน\n5. หลีกเลี่ยงยาที่เป็นพิษต่อตับ\n6. นัด Ultrasound ตับซ้ำใน 6-12 เดือน`,
+};
+const PROB_TH={
+  DLP:'ไขมันในเลือดสูง (LDL สูง)',
+  'High blood pressure':'ความดันโลหิตสูง',
+  Hypertension:'โรคความดันโลหิตสูง',
+  Overweight:'น้ำหนักเกินมาตรฐาน',
+  Obesity:'โรคอ้วน',
+  Anemia:'โลหิตจาง',
+  Hypertriglyceridemia:'ไตรกลีเซอไรด์สูง',
+  Hyperuricemia:'ภาวะกรดยูริกในเลือดสูง',
+  Gout:'โรคเกาต์',
+  IFG:'น้ำตาลในเลือดสูงเสี่ยงโรคเบาหวาน',
+  DM:'โรคเบาหวาน',
+  'Fatty liver':'ตับแทรกซึมไขมัน (ไขมันพอกตับ)',
+  'Abnormal liver enzyme':'ค่าการทำงานของตับผิดปกติ',
+};
+const LABS={
+  DLP:[{l:'Cholesterol',u:'mg/dL'},{l:'LDL',u:'mg/dL'},{l:'HDL',u:'mg/dL'},{l:'TG',u:'mg/dL'}],
+  Hypertriglyceridemia:[{l:'TG',u:'mg/dL'}],
+  'High blood pressure':[{l:'BP',u:'mmHg'}],
+  Hypertension:[{l:'BP',u:'mmHg'}],
+  Overweight:[{l:'BW',u:'kg'},{l:'BMI',u:'kg/m^2'}],
+  Obesity:[{l:'BW',u:'kg'},{l:'BMI',u:'kg/m^2'}],
+  Anemia:[{l:'Hb',u:'g/dL'},{l:'Hct',u:'%'}],
+  Hyperuricemia:[{l:'Uric acid',u:'mg/dL'}],
+  Gout:[{l:'Uric acid',u:'mg/dL'}],
+  IFG:[{l:'FBS',u:'mg/dL'}],
+  DM:[{l:'FBS',u:'mg/dL'},{l:'HbA1c',u:'%'}],
+  'Fatty liver':[{l:'ALT',u:'U/L'},{l:'AST',u:'U/L'}],
+  'Abnormal liver enzyme':[{l:'ALT',u:'U/L'},{l:'AST',u:'U/L'},{l:'ALP',u:'U/L'},{l:'GGT',u:'U/L'}],
+};
+const PRESET_PROBS=['DLP','High blood pressure','Hypertension','Overweight','Obesity','Anemia','Hypertriglyceridemia','Hyperuricemia','Gout','IFG','DM','Fatty liver','Abnormal liver enzyme'];
+const PROB_GROUPS=[
+  ['Metabolic',['DLP','Hypertriglyceridemia','IFG','DM','Overweight','Obesity']],
+  ['Cardiovascular',['High blood pressure','Hypertension']],
+  ['Other',['Anemia','Gout','Hyperuricemia','Fatty liver','Abnormal liver enzyme']],
+];
+const CXR_PRE=['Normal','Cardiomegaly','Prominent bronchovascular markings','Pleural effusion','Infiltration','Emphysematous change','Mass/Nodule','Scoliosis','Aortic knuckle prominent'];
+const US_PRE=['Normal','Fatty liver grade I','Fatty liver grade II','Fatty liver grade III','Gallstone','Cholecystitis','Renal stone','Renal cyst','Hepatomegaly','Splenomegaly'];
+const EKG_PRE=['Normal sinus rhythm','Sinus bradycardia','Sinus tachycardia','LVH','LBBB','RBBB','ST depression','T wave inversion','Atrial fibrillation','Premature beats'];
+const EST_PRE=['Normal','Negative for ischemia','Positive for ischemia','Inconclusive','ST depression >=1mm','Achieved >85% MPHR','Limited by symptoms','Limited by fatigue','Refer cardiologist'];
+const MAMMO_PRE=['Normal','BIRADS 1 — Negative','BIRADS 2 — Benign','BIRADS 3 — Probably benign','BIRADS 4 — Suspicious','BIRADS 5 — Highly suggestive of malignancy','Dense breast tissue','Microcalcification'];
+const AUDIO_PRE=['Normal','Mild hearing loss (bilateral)','Mild hearing loss (left)','Mild hearing loss (right)','Moderate hearing loss (bilateral)','Moderate hearing loss (left)','Moderate hearing loss (right)','Noise-induced hearing loss','High-frequency hearing loss'];
+const EYE_PRE=['Normal','Visual acuity reduced','Colour vision defect','Intraocular pressure elevated','Retinal abnormality','Lens opacity','Refer ophthalmology'];
+const SPIRO_PRE=['Normal','Obstructive pattern (mild)','Obstructive pattern (moderate)','Obstructive pattern (severe)','Restrictive pattern','Mixed pattern','Refer pulmonologist'];
+
+/* ── Thai CV Risk Score (Thai CV Risk Score 2014) ── */
+function calcThaiCV(){
+  const age=parseInt(st.age);
+  if(!age||!st.sex) return null;
+  const male=st.sex==='male';
+  const smoke=st.smoke==='yes';
+  const hasDM=st.probs.some(p=>p.name==='DM')||st.uds.includes('DM');
+  const hasHT=st.probs.some(p=>p.name==='Hypertension'||p.name==='High blood pressure')||st.uds.includes('HT');
+
+  // get LDL from DLP problem
+  let ldl=null,sbp=null,tc=null,hdl=null;
+  st.probs.forEach(p=>{
+    if(p.name==='DLP'||p.name==='Hypertriglyceridemia'){
+      p.labs.forEach(l=>{
+        if(l.l==='LDL'&&l.val)ldl=parseFloat(l.val);
+        if(l.l==='HDL'&&l.val)hdl=parseFloat(l.val);
+        if(l.l==='TC'&&l.val)tc=parseFloat(l.val);
+      });
+    }
+    if(p.name==='Hypertension'||p.name==='High blood pressure'){
+      p.labs.forEach(l=>{
+        if(l.l==='BP'&&l.val){const m=l.val.match(/(\d+)/);if(m)sbp=parseFloat(m[1]);}
+      });
+    }
+  });
+
+  // Simple Thai CV risk scoring (simplified Framingham-based Thai version)
+  // Age points
+  let score=0;
+  if(male){
+    if(age>=30&&age<=34)score+=0;
+    else if(age<=39)score+=2;
+    else if(age<=44)score+=5;
+    else if(age<=49)score+=7;
+    else if(age<=54)score+=8;
+    else if(age<=59)score+=10;
+    else if(age<=64)score+=11;
+    else if(age<=69)score+=12;
+    else score+=13;
+    if(smoke)score+=4;
+    if(hasDM)score+=3;
+    if(hasHT)score+=2;
+    if(ldl){
+      if(ldl>=160)score+=3;
+      else if(ldl>=130)score+=1;
+    }
+    if(hdl){
+      if(hdl<40)score+=2;
+      else if(hdl>=60)score-=1;
+    }
+    if(sbp){
+      if(sbp>=160)score+=3;
+      else if(sbp>=140)score+=2;
+      else if(sbp>=130)score+=1;
+    }
+  }else{
+    if(age>=30&&age<=34)score+=-9;
+    else if(age<=39)score+=-4;
+    else if(age<=44)score+=0;
+    else if(age<=49)score+=3;
+    else if(age<=54)score+=6;
+    else if(age<=59)score+=7;
+    else if(age<=64)score+=8;
+    else if(age<=69)score+=9;
+    else score+=10;
+    if(smoke)score+=3;
+    if(hasDM)score+=4;
+    if(hasHT)score+=2;
+    if(ldl){
+      if(ldl>=160)score+=3;
+      else if(ldl>=130)score+=1;
+    }
+    if(hdl){
+      if(hdl<40)score+=3;
+      else if(hdl>=60)score-=1;
+    }
+    if(sbp){
+      if(sbp>=160)score+=3;
+      else if(sbp>=140)score+=2;
+      else if(sbp>=130)score+=1;
+    }
+  }
+
+  // Convert to % 10-year risk (approximate)
+  const riskMap=male?
+    {'-3':1,0:2,1:3,2:4,3:5,4:6,5:7,6:8,7:9,8:10,9:11,10:13,11:15,12:17,13:19,14:22,15:25,16:29,17:33}:
+    {'-9':1,'-4':2,0:3,3:4,6:6,7:7,8:8,9:9,10:11,11:13,12:15,13:17,14:20,15:24,16:27,17:32};
+  let pct=null;
+  const keys=Object.keys(riskMap).map(Number).sort((a,b)=>a-b);
+  for(let i=0;i<keys.length;i++){
+    if(score<=keys[i]){pct=riskMap[keys[i]];break;}
+  }
+  if(pct===null)pct=riskMap[keys[keys.length-1]]||35;
+
+  let risk='Low',cls='low';
+  if(pct>=20){risk='High';cls='high';}
+  else if(pct>=10){risk='Moderate';cls='mod';}
+  return {score,pct,risk,cls};
+}
+
+/* ── Build helpers ── */
+function mkPill(text,sel,fn,kbFn){
+  const b=document.createElement('button');
+  b.type='button';b.className='pill'+(sel?' sel':'');b.textContent=text;
+  b.tabIndex=0;
+  b.onclick=fn;
+  b.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();fn();}if(kbFn)kbFn(e,b);};
+  return b;
+}
+function mkChip(text,sel,fn){
+  const b=document.createElement('button');
+  b.type='button';b.className='chip'+(sel?' sel':'');b.textContent=text;
+  b.tabIndex=0;b.onclick=fn;
+  b.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();fn();}};
+  return b;
+}
+function mkTgl(text,cls,fn){
+  const b=document.createElement('button');
+  b.type='button';b.className='tgl'+(cls?' '+cls:'');b.textContent=text;
+  b.tabIndex=0;b.onclick=fn;
+  b.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();fn();}};
+  return b;
+}
+function mkTag(text,fn){
+  const s=document.createElement('span');s.className='tag';
+  const t=document.createElement('span');t.textContent=text;
+  const x=document.createElement('button');x.textContent='×';x.type='button';x.onclick=fn;
+  s.appendChild(t);s.appendChild(x);return s;
+}
+function renderTagsWrap(container,items,delFn){
+  container.innerHTML='';
+  items.forEach(u=>container.appendChild(mkTag(u,()=>delFn(u))));
+}
+
+/* ── Imaging block ── */
+function buildImgBlock(key,title,presets,container){
+  container.innerHTML='';
+  const data=st[key];
+  const wrap=document.createElement('div');wrap.className='img-block';
+
+  const row=document.createElement('div');
+  row.className='img-row'+(data.status==='nor'?' state-nor':data.status==='abn'?' state-abn':data.status==='na'?' state-na':'');
+  const ti=document.createElement('span');ti.className='img-title';ti.textContent=title;
+  const tg=document.createElement('div');tg.className='tgl-grp';
+
+  const setState=v=>{data.status=v;if(v==='na'){data.findings.clear();data.custom='';}buildImgBlock(key,title,presets,container);};
+  tg.appendChild(mkTgl('Normal',data.status==='nor'?'nor':'',()=>setState('nor')));
+  tg.appendChild(mkTgl('Abnormal',data.status==='abn'?'abn':'',()=>setState('abn')));
+  tg.appendChild(mkTgl('N/A',data.status==='na'?'na':'',()=>setState('na')));
+  row.appendChild(ti);row.appendChild(tg);wrap.appendChild(row);
+
+  if(data.status&&data.status!=='na'){
+    const det=document.createElement('div');det.className='img-detail show';
+    const chips=document.createElement('div');chips.className='chips';
+    presets.forEach(p=>{
+      chips.appendChild(mkChip(p,data.findings.has(p),()=>{
+        if(data.findings.has(p))data.findings.delete(p);else data.findings.add(p);
+        buildImgBlock(key,title,presets,container);
+      }));
+    });
+    det.appendChild(chips);
+    const ci=document.createElement('input');ci.type='text';ci.placeholder='พิมพ์ผลเพิ่มเติม...';ci.value=data.custom||'';
+    ci.oninput=e=>{data.custom=e.target.value;};
+
+    // ปุ่ม AI แปลผล
+    const aiBtn=document.createElement('button');
+    aiBtn.type='button';aiBtn.className='abtn';aiBtn.style.marginTop='5px';
+    aiBtn.innerHTML='&#10024; แปลผลด้วย AI';
+    aiBtn.onclick=()=>translateImaging(data.custom||[...data.findings].join(', '), title, ci, key, aiBtn);
+
+    det.appendChild(ci);
+    det.appendChild(aiBtn);
+    wrap.appendChild(det);
+  }
+  container.appendChild(wrap);
+}
+
+/* ── Prob cards ── */
+function buildProbCards(){
+  const smoke=st.smoke==='yes';
+  const container=document.getElementById('prob-cards');
+  container.innerHTML='';
+  st.probs.forEach((p,pi)=>{
+    const card=document.createElement('div');card.className='pcard';
+    const hd=document.createElement('div');hd.className='pcard-hd';
+    const nm=document.createElement('span');nm.className='pcard-name';nm.textContent=p.name;
+    const del=document.createElement('button');del.type='button';del.textContent='×';del.className='pdel';
+    del.onclick=()=>{st.probs.splice(pi,1);selProbs.delete(p.name);renderProbPresets();buildProbCards();};
+    hd.appendChild(nm);hd.appendChild(del);card.appendChild(hd);
+
+    const lg=document.createElement('div');
+    lg.style.cssText=p.labs.length>1?'display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:.75rem':'margin-bottom:.75rem';
+    p.labs.forEach((l,li)=>{
+      const w=document.createElement('div');
+      const lb=document.createElement('label');lb.className='lbl';lb.textContent=l.l+(l.u?' ('+l.u+')':'');
+      const inp=document.createElement('input');inp.type='text';inp.placeholder=l.l+(l.u?' ('+l.u+')':'');inp.value=l.val||'';
+      inp.oninput=e=>{st.probs[pi].labs[li].val=e.target.value;};
+      w.appendChild(lb);w.appendChild(inp);lg.appendChild(w);
+    });
+    card.appendChild(lg);
+
+    if(!p.mx&&MX[p.name])p.mx=MX[p.name](smoke);
+    const mxLb=document.createElement('label');mxLb.className='lbl';mxLb.textContent='Management (EN)';
+    const mxTa=document.createElement('textarea');mxTa.style.minHeight='90px';mxTa.value=p.mx||'';
+    mxTa.oninput=e=>st.probs[pi].mx=e.target.value;
+    card.appendChild(mxLb);card.appendChild(mxTa);
+
+    const fuLb=document.createElement('label');fuLb.className='lbl';fuLb.style.marginTop='.625rem';fuLb.textContent='Follow-up plan';
+    const fuIn=document.createElement('input');fuIn.type='text';fuIn.placeholder='เช่น F/U 3 months with lipid profile';fuIn.value=p.fu||'';
+    fuIn.oninput=e=>st.probs[pi].fu=e.target.value;
+    card.appendChild(fuLb);card.appendChild(fuIn);
+    // F/U preset chips
+    const fuPresets=document.createElement('div');fuPresets.style.cssText='display:flex;flex-wrap:wrap;gap:5px;margin-top:6px';
+    [['3m','F/U 3 months'],['6m','F/U 6 months'],['1y','F/U 1 year']].forEach(([label,val])=>{
+      const c=document.createElement('button');c.type='button';c.textContent=label;
+      c.className='chip';c.tabIndex=0;
+      c.onclick=()=>{st.probs[pi].fu=val;fuIn.value=val;};
+      c.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();c.onclick();}};
+      fuPresets.appendChild(c);
+    });
+    card.appendChild(fuPresets);
+    container.appendChild(card);
+  });
+}
+
+/* ── Render pill rows ── */
+function renderSex(){
+  const r=document.getElementById('sex-row');r.innerHTML='';
+  [['ชาย','male'],['หญิง','female']].forEach(([t,v])=>r.appendChild(mkPill(t,st.sex===v,()=>{st.sex=v;renderSex();})));
+}
+function renderSmoke(){
+  const r=document.getElementById('smoke-row');r.innerHTML='';
+  [['ไม่สูบ','no'],['สูบ','yes'],['เคยสูบ','ex']].forEach(([t,v])=>r.appendChild(mkPill(t,st.smoke===v,()=>{st.smoke=v;renderSmoke();})));
+}
+function renderVisit(){
+  const r=document.getElementById('visit-row');r.innerHTML='';
+  [['annual','ตรวจสุขภาพประจำปี','Annual health check-up'],['occ','Occupational medical examination','การตรวจสุขภาพตามปัจจัยเสี่ยงทางอาชีพ']].forEach(([v,t,sub])=>{
+    const c=document.createElement('button');c.type='button';c.className='vcard'+(st.visit===v?' sel':'');c.tabIndex=0;
+    const vt=document.createElement('div');vt.className='vt';vt.textContent=t;
+    const vs=document.createElement('div');vs.className='vs';vs.textContent=sub;
+    c.appendChild(vt);c.appendChild(vs);
+    c.onclick=()=>{st.visit=v;st.workType='';renderVisit();renderOcc();renderMhfSec();};
+    c.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();c.onclick();}};
+    r.appendChild(c);
+  });
+}
+function renderOcc(){
+  const box=document.getElementById('occ-box');
+  box.style.display=st.visit==='occ'?'block':'none';
+  const occExtra=document.getElementById('img-occ-extra');
+  occExtra.style.display=st.visit==='occ'?'block':'none';
+  if(st.visit==='occ'){
+    const r=document.getElementById('wt-row');r.innerHTML='';
+    ['Onshore','Offshore','Seafarer'].forEach(wt=>r.appendChild(mkPill(wt,st.workType===wt,()=>{st.workType=wt;renderOcc();renderMhfSec();})));
+    buildImgBlock('audio','Audiometry',AUDIO_PRE,document.getElementById('img-audio'));
+    buildImgBlock('eye','Eye — Occupational Test',EYE_PRE,document.getElementById('img-eye'));
+    buildImgBlock('spiro','Spirometry',SPIRO_PRE,document.getElementById('img-spiro'));
+  }
+}
+function renderUdYN(){
+  const r=document.getElementById('ud-yn');r.innerHTML='';
+  [['ไม่มี (N)',false],['มี (Y)',true]].forEach(([t,v])=>r.appendChild(mkPill(t,st.udYes===v,()=>{st.udYes=v;document.getElementById('ud-detail').style.display=v?'block':'none';renderUdYN();})));
+}
+function renderUdPresets(){
+  const r=document.getElementById('ud-presets');r.innerHTML='';
+  ['DM','HT','DLP','CKD','CAD','Asthma','GERD','Hypothyroid'].forEach(ud=>r.appendChild(mkPill(ud,st.uds.includes(ud),()=>{if(!st.uds.includes(ud)){st.uds.push(ud);}else{st.uds=st.uds.filter(x=>x!==ud);}renderTagsWrap(document.getElementById('ud-tags'),st.uds,u=>{st.uds=st.uds.filter(x=>x!==u);renderTagsWrap(document.getElementById('ud-tags'),st.uds,()=>{});renderUdPresets();});renderUdPresets();})));
+}
+function renderProbPresets(){
+  const r=document.getElementById('prob-presets');r.innerHTML='';
+  r.style.cssText='display:flex;flex-direction:column;gap:8px;margin-bottom:1rem';
+  PROB_GROUPS.forEach(([groupName,items])=>{
+    const grpWrap=document.createElement('div');
+    const label=document.createElement('div');
+    label.style.cssText='font-family:var(--mono);font-size:9px;color:var(--text3);letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px';
+    label.textContent=groupName;
+    grpWrap.appendChild(label);
+    const row=document.createElement('div');row.style.cssText='display:flex;flex-wrap:wrap;gap:6px';
+    items.forEach(p=>row.appendChild(mkPill(p,selProbs.has(p),()=>{
+      if(selProbs.has(p)){selProbs.delete(p);st.probs=st.probs.filter(x=>x.name!==p);}
+      else{selProbs.add(p);if(!st.probs.find(x=>x.name===p))st.probs.push({name:p,labs:(LABS[p]||[{l:'Value',u:''}]).map(x=>({...x,val:''})),mx:'',mxTh:'',fu:''});}
+      renderTagsWrap(document.getElementById('prob-tags'),[...selProbs],p=>{selProbs.delete(p);st.probs=st.probs.filter(x=>x.name!==p);renderProbPresets();renderTagsWrap(document.getElementById('prob-tags'),[...selProbs],()=>{});buildProbCards();});
+      renderProbPresets();buildProbCards();
+    })));
+    grpWrap.appendChild(row);
+    r.appendChild(grpWrap);
+  });
+}
+function renderMhfSec(){
+  const sec=document.getElementById('mhf-sec');
+  const showMhf=st.visit==='annual'&&st.workType!=='Offshore'&&st.workType!=='Seafarer';
+  sec.style.display=showMhf?'block':'none';
+  if(showMhf){
+    const r=document.getElementById('mhf-row');r.innerHTML='';
+    [['YES — ส่ง MHF',true],['NO — ไม่ส่ง',false]].forEach(([t,v])=>r.appendChild(mkPill(t,st.mhf===v,()=>{st.mhf=v;renderMhfSec();})));
+  }
+}
+
+/* ── Screening recs (only applicable) ── */
+function screeningEN(){
+  const age=parseInt(st.age);const f=st.sex==='female';const r=[];
+  if(age>=45)r.push('Recommend colorectal cancer screening');
+  if(f&&age>=35)r.push('Recommend annual breast cancer screening (mammography)');
+  if(f&&age>=21&&age<=65)r.push('Recommend cervical cancer screening (Pap smear every 3 years)');
+  if(!f&&age>=50)r.push('Recommend prostate cancer screening');
+  return r;
+}
+function screeningTH(){
+  const age=parseInt(st.age);const f=st.sex==='female';const r=[];
+  if(age>=45)r.push('แนะนำตรวจคัดกรองมะเร็งลำไส้ใหญ่');
+  if(f&&age>=35)r.push('แนะนำตรวจคัดกรองมะเร็งเต้านม ทุกปี');
+  if(f&&age>=21&&age<=65)r.push('แนะนำตรวจ Pap smear คัดกรองมะเร็งปากมดลูก ทุก 3 ปี');
+  if(!f&&age>=50)r.push('แนะนำตรวจคัดกรองมะเร็งต่อมลูกหมาก');
+  return r;
+}
+
+/* ── Image line helpers ── */
+const MAMMO_BIRADS_TH={
+  '1':'ตรวจไม่พบความผิดปกติ แนะนำตรวจคัดกรองปีละ 1 ครั้ง และควรตรวจเต้านมด้วยตนเองอย่างน้อยเดือนละครั้ง',
+  '2':'ตรวจพบสิ่งที่มีได้ตามปกติธรรมชาติในเต้านม แนะนำตรวจคัดกรองปีละ 1 ครั้ง และควรตรวจเต้านมด้วยตนเองอย่างน้อยเดือนละครั้ง',
+  '3':'ตรวจพบสิ่งที่คาดว่าน่าจะปกติที่พบได้ในเต้านม โอกาสเสี่ยงมะเร็งเต้านม 0-2% แนะนำปรึกษาแพทย์เฉพาะทางและตรวจติดตามทุกๆ 6 เดือน จนครบ 2 ปี',
+  '4':'ตรวจพบสิ่งที่สงสัยว่าผิดปกติ โอกาสเสี่ยงเป็นมะเร็งเต้านม 2-95% ควรปรึกษาแพทย์เฉพาะทางเพื่อเจาะชิ้นเนื้อ เพื่อตรวจพิสูจน์',
+};
+function getMammoBiradsNum(findings){
+  for(const f of findings){
+    const m=f.match(/BIRADS\s*(\d)/i);if(m)return m[1];
+  }
+  return null;
+}
+function imgLine(key,labelEN){
+  const d=st[key];if(!d.status||d.status==='na')return null;
+  const f=[...d.findings];if(d.custom.trim())f.push(d.custom.trim());
+  let result,consult='';
+  if(d.status==='nor'){
+    result=key==='ekg'?'NSR':key==='est'?'Negative for ischemia':'Normal';
+  }else{
+    result=f.length?f.join(', '):'Abnormal';
+    if(key==='mammo'){
+      const bNum=getMammoBiradsNum(f);
+      if(bNum&&parseInt(bNum)>=3)consult='Consult breast clinic';
+    }
+  }
+  return {label:labelEN,result,consult,isNormal:d.status==='nor'};
+}
+function imgLineTH(key,labelTH){
+  const d=st[key];if(!d.status||d.status==='na')return null;
+  const f=[...d.findings];if(d.custom.trim())f.push(d.custom.trim());
+  // Use AI translation if available
+  if(d.aiTranslation&&d.status!=='nor'){
+    return '# '+labelTH+'\n'+d.aiTranslation;
+  }
+  let result;
+  if(key==='mammo'){
+    const bNum=getMammoBiradsNum(f);
+    if(bNum&&MAMMO_BIRADS_TH[bNum]){
+      // Abnormal mammo → full section with body
+      return '# Mammogram: BIRADS '+bNum+'\n'+MAMMO_BIRADS_TH[bNum];
+    }
+    result=d.status==='nor'?'ผลอยู่ในเกณฑ์ปกติ':f.length?f.join(', '):'ผิดปกติ';
+    return '# Mammogram: '+result;
+  }
+  if(d.status==='nor'){
+    if(key==='ekg')result='คลื่นไฟฟ้าหัวใจอยู่ในเกณฑ์ปกติ';
+    else if(key==='cxr')result='ผลเอกซเรย์ทรวงอกอยู่ในเกณฑ์ปกติ';
+    else if(key==='est')result='ผลการทดสอบสมรรถภาพหัวใจอยู่ในเกณฑ์ปกติ';
+    else result='ผลอยู่ในเกณฑ์ปกติ';
+    return '# '+labelTH+': '+result;
+  }else{
+    result=f.length?f.join(', '):'ผิดปกติ';
+    // Abnormal → separate line for findings
+    return '# '+labelTH+'\n'+result;
+  }
+}
+
+/* ── Build records ── */
+function buildEN(){
+  const smoke=st.smoke==='yes';
+  const sex=st.sex==='male'?'male':'female';
+  const isOcc=st.visit==='occ';
+  const vL=isOcc?'Occupational Medical Examination':'Annual Health Check-up';
+  const cc=isOcc?'Occupational medical examination':'Routine annual health check-up';
+  const ud=st.udYes?'Underlying disease: '+st.uds.join(', '):'No underlying disease';
+  const smk=st.smoke==='yes'?'Current smoker':st.smoke==='ex'?'Ex-smoker':'Non-smoker';
+  const occL=isOcc?'\n    Job: '+(st.job||'-')+'  |  Work type: '+(st.workType||'-'):'';
+  const extra=st.extra?'\n    Additional note: '+st.extra:'';
+
+  const imgKeys=[
+    ['cxr','CXR'],['us','US Abdomen'],['ekg','EKG'],['est','EST'],['mammo','Mammogram'],
+    ...(isOcc?[['audio','Audiometry'],['eye','Eye (Occ)'],['spiro','Spirometry']]:[])
+  ];
+  const normalImgLines=[];
+  const abnImgLines=[];
+  imgKeys.forEach(([key,label])=>{
+    const r=imgLine(key,label);
+    if(!r)return;
+    if(r.isNormal){
+      normalImgLines.push(r.label+': '+r.result);
+    }else{
+      // abnormal goes into problems list
+      let entry=r.label+': '+r.result;
+      if(r.consult)entry+='\n  Management:\n  1. '+r.consult;
+      abnImgLines.push(entry);
+    }
+  });
+  // No separate abnSec — all imaging (normal as flat line above, abnormal as problem entry) goes into prob section
+  const hasProblems=abnImgLines.length||st.probs.length;
+  let out='';
+
+  // Detect metabolic group for combined management
+  const METABOLIC_NAMES=['DLP','Hypertriglyceridemia','IFG','DM','Overweight','Obesity','Fatty liver'];
+  const metabolicProbs=st.probs.filter(p=>METABOLIC_NAMES.includes(p.name));
+  const useCombined=metabolicProbs.length>=2;
+
+  // Per-problem targets/consults to append in combined block
+  const TARGETS_EN={
+    DLP:(p,ud)=>{
+      const ldl=p.labs.find(l=>l.l==='LDL');const tg=p.labs.find(l=>l.l==='TG');
+      const lines=[];
+      const hasCKD=ud.includes('CKD');const hasCAD=ud.includes('CAD');
+      if(hasCKD||hasCAD)lines.push('- DLP: Target LDL <70 mg/dL');
+      else lines.push('- DLP: Target LDL <100 mg/dL');
+      if(ldl&&parseFloat(ldl.val)>190)lines.push('  LDL >190 mg/dL: Consult cardiologist');
+      if(tg&&parseFloat(tg.val)>=500)lines.push('  TG >=500 mg/dL: Consult med for evaluation and/or treatment and follow up');
+      return lines;
+    },
+    Hypertriglyceridemia:(p)=>{
+      const tg=p.labs.find(l=>l.l==='TG');const lines=['- Hypertriglyceridemia: Target TG <150 mg/dL'];
+      if(tg&&parseFloat(tg.val)>=500)lines.push('  TG >=500 mg/dL: Consult med for evaluation and/or treatment and follow up');
+      return lines;
+    },
+    IFG:()=>['- IFG: Recheck FBS/HbA1c next year'],
+    DM:()=>{
+      const isKnown=st.uds.includes('DM');
+      return isKnown
+        ?['- DM: Continue follow-up with current physician; annual monitoring HbA1c, microalbumin, renal function, foot exam, ophthalmology']
+        :['- DM (newly diagnosed): Refer to physician for evaluation, treatment initiation, and follow-up; screen for diabetic complications'];
+    },
+    Overweight:(p)=>{const bmi=p.labs.find(l=>l.l==='BMI');return ['- Overweight: Target BMI <23 kg/m^2'+(bmi&&bmi.val?' (current '+bmi.val+' kg/m^2)':'')];},
+    Obesity:(p)=>{const bmi=p.labs.find(l=>l.l==='BMI');return ['- Obesity: Target BMI <23 kg/m^2'+(bmi&&bmi.val?' (current '+bmi.val+' kg/m^2)':''),'  Screen for comorbidities (DM, HTN, OSA, DLP)'];},
+    'Fatty liver':()=>['- Fatty liver: Weight reduction >=10% of body weight; follow-up USS liver in 6-12 months'],
+  };
+
+  // Normal imaging — flat lines above Problems list
+  if(normalImgLines.length){
+    out+=normalImgLines.join('\n')+'\n';
+  }
+
+  // Problems list
+  if(hasProblems){
+    out+='\nProblems list\n';
+    if(abnImgLines.length){
+      abnImgLines.forEach(l=>{out+='\n- '+l+'\n';});
+    }
+    if(st.probs.length>0){
+      st.probs.forEach(p=>{
+        const isMetabolic=METABOLIC_NAMES.includes(p.name);
+        const labLine=p.labs.filter(l=>l.val).map(l=>l.l+' '+l.val+' '+l.u).join(', ');
+        out+='\n- '+p.name+(labLine?'\n  '+labLine:'');
+        if(useCombined&&isMetabolic){
+          // No Management section — all goes to Combined block
+        } else {
+          out+='\n  Management:\n';
+          (p.mx||'').split('\n').forEach(l=>{if(l.trim())out+='  '+l+'\n';});
+          // LDL >190
+          if(p.name==='DLP'){
+            const ldlLab=p.labs.find(l=>l.l==='LDL');
+            if(ldlLab&&parseFloat(ldlLab.val)>190)out+='  - LDL >190 mg/dL: Consult cardiologist\n';
+          }
+          // TG >=500
+          if(p.name==='Hypertriglyceridemia'||p.name==='DLP'){
+            const tgLab=p.labs.find(l=>l.l==='TG');
+            if(tgLab&&parseFloat(tgLab.val)>=500)out+='  - TG >=500 mg/dL: Consult med for evaluation and/or treatment and follow up\n';
+          }
+        }
+        // Underlying-aware (non-metabolic path)
+        if(!useCombined||!isMetabolic){
+          const hasCKD=st.uds.includes('CKD');
+          const hasDM=st.uds.includes('DM')||st.probs.some(x=>x.name==='DM');
+          const hasCAD=st.uds.includes('CAD');
+          if(p.name==='DLP'){
+            if(hasCKD)out+='  - With CKD: target LDL <70 mg/dL\n';
+            if(hasCAD)out+='  - With CAD/established ASCVD: target LDL <70 mg/dL\n';
+          }
+          if(p.name==='Hypertension'||p.name==='High blood pressure'){
+            if(hasDM)out+='  - With DM: prefer ACEi or ARB as first-line\n';
+            if(hasCKD)out+='  - With CKD: prefer ACEi or ARB; monitor renal function and K+\n';
+          }
+          if(p.name==='Fatty liver'){
+            const mCo=['DLP','DM','IFG','Obesity','Hypertension','High blood pressure'];
+            const hasCo=st.probs.some(x=>x!==p&&mCo.includes(x.name))||st.uds.some(u=>['DM','HT','DLP'].includes(u));
+            if(hasCo)out+='  - Consider metabolic syndrome workup (FBS/HbA1c, lipid profile, BP, waist circumference)\n';
+          }
+        }
+        if(p.fu)out+='  Follow-up: '+p.fu+'\n';
+      });
+
+      // Combined Management block
+      if(useCombined){
+        const smoke=st.smoke==='yes';
+        out+='\n- Management:\n';
+        out+='  Diet: reduce simple carbohydrates, saturated/trans fat, alcohol; emphasize vegetables and lean protein\n';
+        out+='  Exercise: aerobic >=150 min/week + resistance training\n';
+        out+='  Weight: caloric restriction 500-750 kcal/day deficit if overweight\n';
+        if(smoke)out+='  Smoking: cessation counseling\n';
+        out+='  Target:\n';
+        metabolicProbs.forEach(p=>{
+          const fn=TARGETS_EN[p.name];
+          if(fn)fn(p,st.uds).forEach(l=>out+='  '+l+'\n');
+        });
+      }
+    }
+  }
+  const scr=screeningEN();
+  const scrLines=scr.length?'\n'+scr.map(s=>'- '+s).join('\n'):'';
+  return `${vL}\nCC: ${cc}\nPI: ${st.age} year old ${sex}\n    General condition: well${extra}\n    ${ud}\n    Smoking: ${smk}${occL}\n\n${out}${scrLines}`;
+}
+
+function buildTH(){
+  const smoke=st.smoke==='yes';
+  const isOcc=st.visit==='occ';
+
+  const sections=[];
+
+  // Imaging — single-line format: # Label: ผล
+  const imgDefs=[
+    ['cxr','CXR'],
+    ['ekg','EKG'],
+    ['est','EST'],
+    ['us','US whole abdomen'],
+    ['mammo','Mammogram'],
+    ...(isOcc?[['audio','Audiometry'],['eye','Eye (Occ)'],['spiro','Spirometry']]:[]),
+  ];
+  imgDefs.forEach(([key,label])=>{
+    const line=imgLineTH(key,label);
+    if(line)sections.push(line);
+  });
+
+  // Detect metabolic problems for combined management
+  const METABOLIC_NAMES_TH=['DLP','Hypertriglyceridemia','IFG','DM','Overweight','Obesity','Fatty liver'];
+  const metabolicProbs_th=st.probs.filter(p=>METABOLIC_NAMES_TH.includes(p.name));
+  const useCombined_th=metabolicProbs_th.length>=2;
+
+  // Per-problem targets for TH combined block
+  const TARGETS_TH={
+    DLP:(p,ud)=>{
+      const ldl=p.labs.find(l=>l.l==='LDL');const tg=p.labs.find(l=>l.l==='TG');
+      const hasCKD=ud.includes('CKD');const hasCAD=ud.includes('CAD');
+      const lines=[(hasCKD||hasCAD)?'เป้าหมาย LDL <70 mg/dL (มีโรคไตเรื้อรัง/โรคหัวใจ)':'เป้าหมาย LDL <100 mg/dL'];
+      if(ldl&&parseFloat(ldl.val)>190)lines.push('ควรปรึกษาแพทย์เพื่อรักษาภาวะไขมันในเลือดสูง');
+      if(tg&&parseFloat(tg.val)>=500)lines.push('ระดับไตรกลีเซอไรด์สูงมาก ควรปรึกษาแพทย์เพื่อประเมินและรักษา');
+      return lines;
+    },
+    Hypertriglyceridemia:(p)=>{
+      const tg=p.labs.find(l=>l.l==='TG');const lines=['เป้าหมาย TG <150 mg/dL'];
+      if(tg&&parseFloat(tg.val)>=500)lines.push('ระดับไตรกลีเซอไรด์สูงมาก ควรปรึกษาแพทย์เพื่อประเมินและรักษา');
+      return lines;
+    },
+    IFG:()=>['นัดตรวจระดับน้ำตาลซ้ำในปีหน้า'],
+    DM:()=>{
+      const isKnown=st.uds.includes('DM');
+      return isKnown
+        ?['แนะนำติดตามรักษาต่อเนื่องกับแพทย์ที่ดูแลอยู่','นัดตรวจตา ตรวจเท้า และตรวจไตปีละครั้ง']
+        :['ตรวจพบครั้งนี้ แนะนำพบแพทย์เพื่อรับการวินิจฉัยและรักษาต่อเนื่อง','แพทย์จะตรวจคัดกรองภาวะแทรกซ้อนของเบาหวาน (ตา ไต เท้า)'];
+    },
+    Overweight:(p)=>{const bmi=p.labs.find(l=>l.l==='BMI');return ['เป้าหมาย BMI <23 kg/m^2'+(bmi&&bmi.val?' (ปัจจุบัน '+bmi.val+' kg/m^2)':'')];},
+    Obesity:(p)=>{const bmi=p.labs.find(l=>l.l==='BMI');return ['เป้าหมาย BMI <23 kg/m^2'+(bmi&&bmi.val?' (ปัจจุบัน '+bmi.val+' kg/m^2)':''),'ตรวจคัดกรองโรคแทรกซ้อน (เบาหวาน ความดัน ภาวะหยุดหายใจขณะหลับ ไขมัน)'];},
+    'Fatty liver':()=>['ลดน้ำหนัก >=10% ของน้ำหนักตัว งดแอลกอฮอล์ นัด Ultrasound ตับซ้ำใน 6-12 เดือน'],
+  };
+
+  // Each problem
+  if(st.probs.length>0){
+    st.probs.forEach(p=>{
+      const isMetabolic_th=METABOLIC_NAMES_TH.includes(p.name);
+      const nameTH=PROB_TH[p.name]||p.name;
+      const labLine=p.labs.filter(l=>l.val).map(l=>l.l+' '+l.val+' '+l.u).join(', ');
+      let sec='#'+nameTH;
+      if(labLine)sec+='\nผล: '+labLine;
+      if(useCombined_th&&isMetabolic_th){
+        // Skip management here — all in combined block
+      } else {
+        const mxSrc=p.mxTh||(MX_TH[p.name]?MX_TH[p.name](smoke):p.mx);
+        const mxLines=(mxSrc||'').split('\n').filter(l=>l.trim());
+        if(mxLines.length>0){
+          sec+='\nคำแนะนำ:';
+          mxLines.forEach(l=>{sec+='\n'+l;});
+        }
+        // TG >=500
+        if(p.name==='Hypertriglyceridemia'||p.name==='DLP'){
+          const tgLab=p.labs.find(l=>l.l==='TG');
+          if(tgLab&&parseFloat(tgLab.val)>=500)
+            sec+='\nระดับไตรกลีเซอไรด์สูงมาก ควรปรึกษาแพทย์เพื่อประเมินและรักษา (เพื่อลดความเสี่ยงต่อภาวะตับอ่อนอักเสบ)';
+        }
+        // Fatty liver
+        if(p.name==='Fatty liver'){
+          const mCo=['DLP','DM','IFG','Obesity','Hypertension','High blood pressure'];
+          const hasCo=st.probs.some(x=>x!==p&&mCo.includes(x.name))||st.uds.some(u=>['DM','HT','DLP'].includes(u));
+          if(hasCo)sec+='\nควรตรวจประเมินกลุ่มอาการเมตาบอลิก (น้ำตาล ไขมัน ความดัน รอบเอว) เพิ่มเติม';
+        }
+        // Underlying-aware
+        const hasCKD_th=st.uds.includes('CKD');
+        const hasDM_th=st.uds.includes('DM')||st.probs.some(x=>x.name==='DM');
+        const hasCAD_th=st.uds.includes('CAD');
+        if(p.name==='DLP'){
+          if(hasCKD_th)sec+='\nเนื่องจากมีโรคไตเรื้อรัง เป้าหมาย LDL ควรต่ำกว่า 70 mg/dL';
+          if(hasCAD_th)sec+='\nเนื่องจากมีโรคหลอดเลือดหัวใจ เป้าหมาย LDL ควรต่ำกว่า 70 mg/dL';
+        }
+        if(p.name==='Hypertension'||p.name==='High blood pressure'){
+          if(hasDM_th)sec+='\nเนื่องจากมีเบาหวานร่วมด้วย ยาลดความดันกลุ่ม ACEi/ARB เป็นทางเลือกแรก';
+          if(hasCKD_th)sec+='\nเนื่องจากมีโรคไตเรื้อรัง ยาลดความดันกลุ่ม ACEi/ARB เป็นทางเลือกแรก พร้อมติดตามการทำงานของไตและระดับโพแทสเซียม';
+        }
+      }
+      if(p.fu)sec+='\nนัดติดตาม: '+p.fu;
+      sections.push(sec);
+    });
+
+    // Combined Management block (TH)
+    if(useCombined_th){
+      let combined='#คำแนะนำ';
+      combined+='\nอาหาร: ลดแป้งและน้ำตาล ลดอาหารไขมันอิ่มตัวและไขมันทรานส์ งดหรือลดแอลกอฮอล์ เพิ่มผักและโปรตีน';
+      combined+='\nการออกกำลังกาย: แบบแอโรบิกอย่างน้อย 150 นาที/สัปดาห์ ร่วมกับการฝึกกล้ามเนื้อ';
+      combined+='\nน้ำหนัก: ควบคุมแคลอรี่ ลดประมาณ 500-750 kcal/วัน ถ้าน้ำหนักเกิน';
+      if(smoke)combined+='\nบุหรี่: แนะนำเลิกสูบบุหรี่';
+      combined+='\n\nเป้าหมาย:';
+      metabolicProbs_th.forEach(p=>{
+        const fn=TARGETS_TH[p.name];
+        const nameTH=PROB_TH[p.name]||p.name;
+        if(fn){
+          combined+='\n▸ '+nameTH+':';
+          fn(p,st.uds).forEach(l=>{combined+='\n  '+l;});
+        }
+      });
+      sections.push(combined);
+    }
+  }
+
+  // Screening — each as single-line # section
+  const scr=screeningTH();
+  scr.forEach(s=>sections.push('#'+s));
+
+  return sections.join('\n\n');
+}
+
+/* ── Output view ── */
+function showOutput(){
+  const qiErr=document.getElementById('qi-err');
+  if(!st.age){qiErr.style.display='block';document.getElementById('qi').focus();return;}
+  if(!st.sex){showToast('กรุณาเลือกเพศ','error');return;}
+  qiErr.style.display='none';
+  if(!st.smoke){showToast('กรุณาระบุ smoking status','error');return;}
+  if(st.visit==='occ'&&!st.workType){showToast('กรุณาเลือก work type','error');return;}
+  if(st.udYes===null){showToast('กรุณาเลือก underlying disease (Y/N)','error');return;}
+  const showMhf=st.visit==='annual'&&st.workType!=='Offshore'&&st.workType!=='Seafarer';
+  if(showMhf&&st.mhf===null){showToast('กรุณาเลือก MHF (YES/NO)','error');return;}
+
+  const enRec=buildEN();
+  const doTH=showMhf&&st.mhf===true;
+  const thRec=doTH?buildTH():null;
+
+  document.getElementById('view-form').style.display='none';
+  const vo=document.getElementById('view-output');vo.style.display='block';
+
+  const tabs=document.getElementById('out-tabs');tabs.innerHTML='';
+  const panels=document.getElementById('out-panels');panels.innerHTML='';
+
+  const tabDefs=doTH?[['en','EN'],['th','MHF']]:[['en','EN']];
+  tabDefs.forEach(([k,label])=>{
+    const tb=document.createElement('button');tb.type='button';tb.className='out-tab'+(st.activeTab===k?' active':'');tb.textContent=label;tb.tabIndex=0;
+    tb.onclick=()=>{st.activeTab=k;document.querySelectorAll('.out-tab').forEach(x=>x.classList.remove('active'));tb.classList.add('active');document.querySelectorAll('.out-panel').forEach(x=>x.classList.remove('active'));document.getElementById('panel-'+k).classList.add('active');};
+    tb.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();tb.onclick();}};
+    tabs.appendChild(tb);
+  });
+  [[enRec,'en'],[thRec,'th']].filter(([r])=>r).forEach(([rec,k])=>{
+    const panel=document.createElement('div');panel.className='out-panel'+(st.activeTab===k?' active':'');panel.id='panel-'+k;
+    const pre=document.createElement('pre');pre.className='out-pre';pre.textContent=rec;panel.appendChild(pre);
+    const acts=document.createElement('div');acts.className='out-actions';
+    const cb=document.createElement('button');cb.type='button';cb.className='copy-btn';cb.textContent='COPY';
+    cb.onclick=()=>{navigator.clipboard.writeText(rec);showToast('✓ Copied to clipboard ('+rec.length+' chars)');cb.textContent='COPIED ✓';cb.className='copy-btn ok';setTimeout(()=>{cb.textContent='COPY';cb.className='copy-btn';},1500);};
+    cb.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();cb.onclick();}};
+    acts.appendChild(cb);panel.appendChild(acts);panels.appendChild(panel);
+  });
+}
+
+function showForm(){
+  document.getElementById('view-form').style.display='block';
+  document.getElementById('view-output').style.display='none';
+}
+
+/* ── Init ── */
+renderSmoke();
+renderVisit();
+renderOcc();
+renderUdYN();
+renderUdPresets();
+buildImgBlock('cxr','CXR — Chest X-ray',CXR_PRE,document.getElementById('img-cxr'));
+buildImgBlock('us','Ultrasound Abdomen',US_PRE,document.getElementById('img-us'));
+buildImgBlock('ekg','EKG / ECG',EKG_PRE,document.getElementById('img-ekg'));
+buildImgBlock('est','EST — Exercise Stress Test',EST_PRE,document.getElementById('img-est'));
+buildImgBlock('mammo','Mammogram',MAMMO_PRE,document.getElementById('img-mammo'));
+renderProbPresets();
+renderMhfSec();
+
+/* ── Event listeners ── */
+document.getElementById('qi').addEventListener('input',function(){
+  const v=this.value.trim();
+  // Number only → age only
+  if(v.match(/^\d+$/)){
+    st.age=v;
+    document.getElementById('qi-err').style.display='none';
+    return;
+  }
+  // Pattern like 47m, 47f, 47yom, 47yof → set both age and sex
+  const m=v.match(/^(\d+)\s*(?:yo?\s*)?([mf])$/i);
+  if(m){
+    st.age=m[1];
+    st.sex=m[2].toLowerCase()==='f'?'female':'male';
+    document.getElementById('qi-err').style.display='none';
+    renderSex();
+    return;
+  }
+  st.age='';
+});
+document.getElementById('qi').addEventListener('keydown',function(e){
+  if(e.key==='Enter'&&st.age){
+    e.preventDefault();
+    // Focus first sex button if sex not chosen, else focus smoking
+    if(!st.sex){
+      const sexBtn=document.querySelector('#sex-row .pill');
+      if(sexBtn)sexBtn.focus();
+    } else {
+      const smokeBtn=document.querySelector('#smoke-row .pill');
+      if(smokeBtn)smokeBtn.focus();
+    }
+  }
+});
+document.getElementById('job-in').addEventListener('input',function(){st.job=this.value.trim();});
+
+let udVal='';
+document.getElementById('ud-in').addEventListener('input',function(){udVal=this.value;});
+document.getElementById('ud-in').addEventListener('keydown',function(e){
+  if(e.key==='Enter'){e.preventDefault();const v=this.value.trim();if(v&&!st.uds.includes(v)){st.uds.push(v);this.value='';udVal='';renderTagsWrap(document.getElementById('ud-tags'),st.uds,u=>{st.uds=st.uds.filter(x=>x!==u);renderTagsWrap(document.getElementById('ud-tags'),st.uds,()=>{});renderUdPresets();});renderUdPresets();}}
+});
+document.getElementById('ud-add').addEventListener('click',function(){
+  const inp=document.getElementById('ud-in');const v=inp.value.trim();if(v&&!st.uds.includes(v)){st.uds.push(v);inp.value='';udVal='';renderTagsWrap(document.getElementById('ud-tags'),st.uds,u=>{st.uds=st.uds.filter(x=>x!==u);renderTagsWrap(document.getElementById('ud-tags'),st.uds,()=>{});renderUdPresets();});renderUdPresets();}
+});
+
+let probCv='';
+document.getElementById('prob-custom').addEventListener('input',function(){probCv=this.value;});
+document.getElementById('prob-custom').addEventListener('keydown',function(e){
+  if(e.key==='Enter'){e.preventDefault();const v=this.value.trim();if(v){selProbs.add(v);if(!st.probs.find(x=>x.name===v))st.probs.push({name:v,labs:[{l:'Value',u:'',val:''}],mx:'',mxTh:'',fu:''});this.value='';probCv='';renderProbPresets();buildProbCards();renderTagsWrap(document.getElementById('prob-tags'),[...selProbs],p=>{selProbs.delete(p);st.probs=st.probs.filter(x=>x.name!==p);renderProbPresets();buildProbCards();renderTagsWrap(document.getElementById('prob-tags'),[...selProbs],()=>{});});}}
+});
+document.getElementById('prob-custom-add').addEventListener('click',function(){
+  const inp=document.getElementById('prob-custom');const v=inp.value.trim();if(v){selProbs.add(v);if(!st.probs.find(x=>x.name===v))st.probs.push({name:v,labs:[{l:'Value',u:'',val:''}],mx:'',mxTh:'',fu:''});inp.value='';probCv='';renderProbPresets();buildProbCards();renderTagsWrap(document.getElementById('prob-tags'),[...selProbs],p=>{selProbs.delete(p);st.probs=st.probs.filter(x=>x.name!==p);renderProbPresets();buildProbCards();renderTagsWrap(document.getElementById('prob-tags'),[...selProbs],()=>{});});}
+});
+document.getElementById('extra-note').addEventListener('input',function(){st.extra=this.value;});
+document.getElementById('gen-btn').addEventListener('click',showOutput);
+document.getElementById('back-btn').addEventListener('click',showForm);
+document.getElementById('new-btn').addEventListener('click',function(){
+  Object.assign(st,{age:'',sex:'',smoke:'',visit:'annual',job:'',workType:'',udYes:null,uds:[],
+    cxr:{status:'na',findings:new Set(),custom:'',aiTranslation:''},us:{status:'na',findings:new Set(),custom:'',aiTranslation:''},ekg:{status:'na',findings:new Set(),custom:'',aiTranslation:''},
+    est:{status:'na',findings:new Set(),custom:'',aiTranslation:''},mammo:{status:'na',findings:new Set(),custom:'',aiTranslation:''},
+    audio:{status:'na',findings:new Set(),custom:'',aiTranslation:''},eye:{status:'na',findings:new Set(),custom:'',aiTranslation:''},spiro:{status:'na',findings:new Set(),custom:'',aiTranslation:''},
+    probs:[],extra:'',mhf:null,activeTab:'en'});
+  selProbs.clear();
+  document.getElementById('qi').value='';st.sex='';document.getElementById('job-in').value='';
+  document.getElementById('extra-note').value='';
+  renderSmoke();renderSex();renderVisit();renderOcc();renderUdYN();document.getElementById('ud-detail').style.display='none';
+  document.getElementById('ud-tags').innerHTML='';renderUdPresets();
+  buildImgBlock('cxr','CXR — Chest X-ray',CXR_PRE,document.getElementById('img-cxr'));
+  buildImgBlock('us','Ultrasound Abdomen',US_PRE,document.getElementById('img-us'));
+  buildImgBlock('ekg','EKG / ECG',EKG_PRE,document.getElementById('img-ekg'));
+  buildImgBlock('est','EST — Exercise Stress Test',EST_PRE,document.getElementById('img-est'));
+  buildImgBlock('mammo','Mammogram',MAMMO_PRE,document.getElementById('img-mammo'));
+  renderProbPresets();document.getElementById('prob-tags').innerHTML='';buildProbCards();renderMhfSec();
+  showForm();document.getElementById('qi').focus();
+});
+
+/* ── Page load init ── */
+renderSmoke();
+renderSex();
+renderVisit();
+renderOcc();
+renderUdYN();
+renderUdPresets();
+buildImgBlock('cxr','CXR — Chest X-ray',CXR_PRE,document.getElementById('img-cxr'));
+buildImgBlock('us','Ultrasound Abdomen',US_PRE,document.getElementById('img-us'));
+buildImgBlock('ekg','EKG / ECG',EKG_PRE,document.getElementById('img-ekg'));
+buildImgBlock('est','EST — Exercise Stress Test',EST_PRE,document.getElementById('img-est'));
+buildImgBlock('mammo','Mammogram',MAMMO_PRE,document.getElementById('img-mammo'));
+renderProbPresets();
+buildProbCards();
+renderMhfSec();
+document.getElementById('qi').focus();
+
+/* ── Keyboard shortcuts ── */
+document.addEventListener('keydown',function(e){
+  // Ctrl+Enter (or Cmd+Enter) → generate / copy (depending on view)
+  if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){
+    e.preventDefault();
+    const isOutput=document.getElementById('view-output').style.display!=='none';
+    if(isOutput){
+      // copy active panel
+      const activePanel=document.querySelector('.out-panel.active');
+      if(activePanel){
+        const cb=activePanel.querySelector('.copy-btn');
+        if(cb)cb.click();
+      }
+    } else {
+      document.getElementById('gen-btn').click();
+    }
+  }
+  // Ctrl+1 / Ctrl+2 → switch tabs in output view
+  if((e.ctrlKey||e.metaKey)&&(e.key==='1'||e.key==='2')){
+    const isOutput=document.getElementById('view-output').style.display!=='none';
+    if(isOutput){
+      e.preventDefault();
+      const tabs=document.querySelectorAll('.out-tab');
+      const idx=parseInt(e.key)-1;
+      if(tabs[idx])tabs[idx].click();
+    }
+  }
+});
+</script>
+</body>
+</html>
