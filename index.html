@@ -801,15 +801,15 @@ function screeningEN(){
   const age=parseInt(st.age);const f=st.sex==='female';const r=[];
   if(age>=45)r.push('Recommend colorectal cancer screening');
   if(f&&age>=35)r.push('Recommend annual breast cancer screening (mammography)');
-  if(f&&age>=21&&age<=65)r.push('Recommend cervical cancer screening (Pap smear every 3 years)');
+  if(f&&age>=21&&age<=65)r.push('Recommend cervical cancer screening');
   if(!f&&age>=50)r.push('Recommend prostate cancer screening');
   return r;
 }
 function screeningTH(){
   const age=parseInt(st.age);const f=st.sex==='female';const r=[];
   if(age>=45)r.push('แนะนำตรวจคัดกรองมะเร็งลำไส้ใหญ่');
-  if(f&&age>=35)r.push('แนะนำตรวจคัดกรองมะเร็งเต้านม ทุกปี');
-  if(f&&age>=21&&age<=65)r.push('แนะนำตรวจ Pap smear คัดกรองมะเร็งปากมดลูก ทุก 3 ปี');
+  if(f&&age>=35)r.push('แนะนำตรวจคัดกรองมะเร็งเต้านม');
+  if(f&&age>=21&&age<=65)r.push('แนะนำตรวจคัดกรองมะเร็งปากมดลูก');
   if(!f&&age>=50)r.push('แนะนำตรวจคัดกรองมะเร็งต่อมลูกหมาก');
   return r;
 }
