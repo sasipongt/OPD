@@ -452,10 +452,10 @@ const CLINICAL_GUIDELINES = {
     combinedTargetTH: (p) => { const bmi=p.labs.find(l=>l.l==='BMI'); return [`เป้าหมาย BMI <23 kg/m^2` + (bmi&&bmi.val?` (ปัจจุบัน ${bmi.val})`:''), 'ตรวจคัดกรองโรคแทรกซ้อน (เบาหวาน ความดัน ไขมัน)']; }
   },
   'Fatty liver': {
-    mxEN: () => `1. Weight reduction >=10% of body weight\n2. Aerobic exercise + resistance training\n3. Alcohol abstinence if alcohol-related\n4. Follow-up USS liver in 6-12 months`,
-    mxTH: () => `1. ลดน้ำหนัก >=10% ของน้ำหนักตัว (สำคัญที่สุด)\n2. ออกกำลังกายทั้งแบบแอโรบิกและเสริมสร้างกล้ามเนื้อ\n3. งดแอลกอฮอล์โดยเด็ดขาด\n4. นัด Ultrasound ตับซ้ำใน 6-12 เดือน`,
-    combinedTargetEN: () => '- Fatty liver: Weight reduction >=10% of body weight; follow-up USS liver in 6-12 months',
-    combinedTargetTH: () => 'ลดน้ำหนัก >=10% ของน้ำหนักตัว งดแอลกอฮอล์ นัด Ultrasound ตับซ้ำใน 6-12 เดือน',
+    mxEN: () => `1. Weight reduction >=10% of body weight\n2. Aerobic exercise + resistance training\n3. Alcohol abstinence if alcohol-related\n4. Follow-up Ultrasound liver in 6-12 months`,
+    mxTH: () => `1. ลดน้ำหนัก >=10% ของน้ำหนักตัว (สำคัญที่สุด)\n2. ออกกำลังกายทั้งแบบแอโรบิกและเสริมสร้างกล้ามเนื้อ\n3. งดแอลกอฮอล์\n4. นัด Ultrasound ตับซ้ำใน 6-12 เดือน`,
+    combinedTargetEN: () => '- Fatty liver: Weight reduction >=10% of body weight; follow-up US liver in 6-12 months',
+    combinedTargetTH: () => 'ลดน้ำหนัก >=10% ของน้ำหนักตัว งดแอลกอฮอล์ ติดตาม Ultrasound ตับซ้ำใน 6-12 เดือน',
     conditionsEN: (uds, probs, p) => {
       const mCo = ['DLP','DM','IFG','Obesity','Hypertension','High blood pressure'];
       const hasCo = probs.some(x=>x.name!==p.name && mCo.includes(x.name)) || uds.some(u=>['DM','HT','DLP'].includes(u));
@@ -515,7 +515,7 @@ const PROB_TH={
   Hypertension:'โรคความดันโลหิตสูง', Overweight:'น้ำหนักเกินมาตรฐาน',
   Obesity:'โรคอ้วน', Anemia:'โลหิตจาง', Hypertriglyceridemia:'ไตรกลีเซอไรด์สูง',
   Hyperuricemia:'ภาวะกรดยูริกในเลือดสูง', Gout:'โรคเกาต์', IFG:'น้ำตาลในเลือดสูงเสี่ยงโรคเบาหวาน',
-  DM:'โรคเบาหวาน', 'Fatty liver':'ตับแทรกซึมไขมัน (ไขมันพอกตับ)', 'Abnormal liver enzyme':'ค่าการทำงานของตับผิดปกติ',
+  DM:'โรคเบาหวาน', 'Fatty liver':'ไขมันพอกตับ', 'Abnormal liver enzyme':'ค่าการทำงานของตับผิดปกติ',
 };
 const LABS={
   DLP:[{l:'Cholesterol',u:'mg/dL'},{l:'LDL',u:'mg/dL'},{l:'HDL',u:'mg/dL'},{l:'TG',u:'mg/dL'}],
