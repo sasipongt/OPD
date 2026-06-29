@@ -441,7 +441,7 @@ const CLINICAL_GUIDELINES = {
   },
   'Overweight': {
     mxEN: s => `1. Caloric restriction 500-750 kcal/day deficit\n2. Aerobic exercise >=150 min/week + resistance training\n3. Dietary counseling${s?'\n4. Smoking cessation counseling\n5.':'\n4.'} Target BMI <23 kg/m^2`,
-    mxTH: s => `1. ลดแคลอรี่ 500-750 kcal/วัน เลือกอาหารที่มีประโยชน์\n2. ออกกำลังกายแบบแอโรบิก >=150 นาที/สัปดาห์${s?'\n3. แนะนำเลิกสูบบุหรี่\n4.':'\n3.'} เป้าหมาย BMI <23 kg/m^2`,
+    mxTH: s => `1. ลดแคลอรี่ 500-750 kcal/วัน \n2. ออกกำลังกายแบบแอโรบิก >=150 นาที/สัปดาห์${s?'\n3. แนะนำเลิกสูบบุหรี่\n4.':'\n3.'} เป้าหมาย BMI <23 kg/m^2`,
     combinedTargetEN: (p) => { const bmi=p.labs.find(l=>l.l==='BMI'); return `- Overweight: Target BMI <23 kg/m^2` + (bmi&&bmi.val?` (current ${bmi.val})`:''); },
     combinedTargetTH: (p) => { const bmi=p.labs.find(l=>l.l==='BMI'); return `เป้าหมาย BMI <23 kg/m^2` + (bmi&&bmi.val?` (ปัจจุบัน ${bmi.val})`:''); }
   },
